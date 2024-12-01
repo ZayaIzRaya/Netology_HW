@@ -1,0 +1,77 @@
+Для решения задачи с использованием Python, мы можем использовать библиотеку `pandas` для работы с данными, `numpy` для математических операций и `matplotlib` для построения графиков. Давайте предположим, что у нас есть данные о жёсткости воды и средней годовой смертности в виде таблицы, где каждая строка представляет собой наблюдение (город), а столбцы содержат значения жёсткости воды и смертности.
+
+### Шаг 1: Импорт библиотек и загрузка данных
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Загрузка данных
+data = pd.read_csv('water_mortality.csv')
+
+# Преобразование данных в числовой формат
+data['Water hardness'] = pd.to_numeric(data['Water hardness'])
+data['Mortality'] = pd.to_numeric(data['Mortality'])
+```
+
+### Шаг 2: Построение точечного графика
+```python
+plt.figure(figsize=(10, 6))
+plt.scatter(data['Water hardness'], data['Mortality'], marker='o', c='blue')
+plt.xlabel('Жёсткость воды')
+plt.ylabel('Средняя годовая смертность')
+plt.title('Зависимость смертности от жёсткости воды')
+plt.show()
+```
+
+### Шаг 3: Расчёт коэффициентов корреляции Пирсона и Спирмена
+```python
+# Пирсон
+pearson_correlation = np.corrcoef(data['Water hardness'].values, data['Mortality'].values)[0, 1]
+print("Коэффициент корреляции Пирсона:", pearson_correlation)
+
+# Спирмен
+spearman_correlation = stats.spearmanr(data['Water hardness'], data['Mortality']).correlation
+print("Коэффициент корреляции Спирмена:", spearman_correlation)
+```
+
+### Шаг 4: Построение модели линейной регрессии
+```python
+from sklearn.linear_model import LinearRegression
+
+X = data['Water hardness'].values.reshape(-1, 1)  # Создание матрицы признаков
+y = data['Mortality'].values                   # Целевые значения
+
+model = LinearRegression()
+model.fit(X, y)
+
+predictions = model.predict(X)
+plt.plot(data['Water hardness'], predictions, color='red')
+```
+
+### Шаг 5: Расчёт коэффициента детерминации
+```python
+r_squared = model.score(X, y)
+print("Коэффициент детерминации:", r_squared)
+```
+
+### Шаг 6: Вывод графика остатков
+```python
+residuals = y - predictions
+plt.hist(residuals, bins=20)
+plt.axvline(0, color='k', linestyle='--')
+plt.title("График остатков")
+plt.show()
+```
+
+Теперь давайте разделим данные на две группы — северные и южные города — и повторим шаги 1–6 для каждой группы отдельно.
+
+Для северных городов:
+```python
+northern_cities = data[data['City'].str.contains('Северный')]
+```
+Для южных городов:
+```python
+southern_cities = data[data['City'].str.contains('Южный')]
+```
+Затем повторите шаги 2–6, используя соответствующие данные. Это позволит нам увидеть, сохраняется ли зависимость между жёсткостью воды и смертностью в разных географических регионах.
