@@ -1,83 +1,841 @@
-# Импорт необходимых библиотек
+
+Домашняя работа к лекции «Задачи классификации и кластеризации»
+Задание
+Возьмите датасет с цветками iris’а (функция load_iris из библиотеки sklearn)
+Оставьте два признака - sepal_length и sepal_width и целевую переменную - variety
+Разделите данные на выборку для обучения и тестирования
+Постройте модель LDA
+Визуализируйте предсказания для тестовой выборки и центры классов
+Отбросьте целевую переменную и оставьте только два признака - sepal_length и sepal_width
+Подберите оптимальное число кластеров для алгоритма kmeans и визуализируйте полученную кластеризацию
+from sklearn.datasets import load_iris
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-
-# Загрузка датасета iris
+from matplotlib import colors
 iris = load_iris()
-X = iris.data[:, :2]  # Используем только два признака: sepal_length и sepal_width
-y = iris.target       # Целевая переменная
+print(iris.DESCR)
+.. _iris_dataset:
 
-# Разделение данных на обучающую и тестовую выборки
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+Iris plants dataset
+--------------------
 
-# Построение модели LDA
-lda = LDA()
+**Data Set Characteristics:**
+
+    :Number of Instances: 150 (50 in each of three classes)
+    :Number of Attributes: 4 numeric, predictive attributes and the class
+    :Attribute Information:
+        - sepal length in cm
+        - sepal width in cm
+        - petal length in cm
+        - petal width in cm
+        - class:
+                - Iris-Setosa
+                - Iris-Versicolour
+                - Iris-Virginica
+                
+    :Summary Statistics:
+
+    ============== ==== ==== ======= ===== ====================
+                    Min  Max   Mean    SD   Class Correlation
+    ============== ==== ==== ======= ===== ====================
+    sepal length:   4.3  7.9   5.84   0.83    0.7826
+    sepal width:    2.0  4.4   3.05   0.43   -0.4194
+    petal length:   1.0  6.9   3.76   1.76    0.9490  (high!)
+    petal width:    0.1  2.5   1.20   0.76    0.9565  (high!)
+    ============== ==== ==== ======= ===== ====================
+
+    :Missing Attribute Values: None
+    :Class Distribution: 33.3% for each of 3 classes.
+    :Creator: R.A. Fisher
+    :Donor: Michael Marshall (MARSHALL%PLU@io.arc.nasa.gov)
+    :Date: July, 1988
+
+The famous Iris database, first used by Sir R.A. Fisher. The dataset is taken
+from Fisher's paper. Note that it's the same as in R, but not as in the UCI
+Machine Learning Repository, which has two wrong data points.
+
+This is perhaps the best known database to be found in the
+pattern recognition literature.  Fisher's paper is a classic in the field and
+is referenced frequently to this day.  (See Duda & Hart, for example.)  The
+data set contains 3 classes of 50 instances each, where each class refers to a
+type of iris plant.  One class is linearly separable from the other 2; the
+latter are NOT linearly separable from each other.
+
+.. topic:: References
+
+   - Fisher, R.A. "The use of multiple measurements in taxonomic problems"
+     Annual Eugenics, 7, Part II, 179-188 (1936); also in "Contributions to
+     Mathematical Statistics" (John Wiley, NY, 1950).
+   - Duda, R.O., & Hart, P.E. (1973) Pattern Classification and Scene Analysis.
+     (Q327.D83) John Wiley & Sons.  ISBN 0-471-22361-1.  See page 218.
+   - Dasarathy, B.V. (1980) "Nosing Around the Neighborhood: A New System
+     Structure and Classification Rule for Recognition in Partially Exposed
+     Environments".  IEEE Transactions on Pattern Analysis and Machine
+     Intelligence, Vol. PAMI-2, No. 1, 67-71.
+   - Gates, G.W. (1972) "The Reduced Nearest Neighbor Rule".  IEEE Transactions
+     on Information Theory, May 1972, 431-433.
+   - See also: 1988 MLC Proceedings, 54-64.  Cheeseman et al"s AUTOCLASS II
+     conceptual clustering system finds 3 classes in the data.
+   - Many, many more ...
+iris
+{'data': array([[5.1, 3.5, 1.4, 0.2],
+        [4.9, 3. , 1.4, 0.2],
+        [4.7, 3.2, 1.3, 0.2],
+        [4.6, 3.1, 1.5, 0.2],
+        [5. , 3.6, 1.4, 0.2],
+        [5.4, 3.9, 1.7, 0.4],
+        [4.6, 3.4, 1.4, 0.3],
+        [5. , 3.4, 1.5, 0.2],
+        [4.4, 2.9, 1.4, 0.2],
+        [4.9, 3.1, 1.5, 0.1],
+        [5.4, 3.7, 1.5, 0.2],
+        [4.8, 3.4, 1.6, 0.2],
+        [4.8, 3. , 1.4, 0.1],
+        [4.3, 3. , 1.1, 0.1],
+        [5.8, 4. , 1.2, 0.2],
+        [5.7, 4.4, 1.5, 0.4],
+        [5.4, 3.9, 1.3, 0.4],
+        [5.1, 3.5, 1.4, 0.3],
+        [5.7, 3.8, 1.7, 0.3],
+        [5.1, 3.8, 1.5, 0.3],
+        [5.4, 3.4, 1.7, 0.2],
+        [5.1, 3.7, 1.5, 0.4],
+        [4.6, 3.6, 1. , 0.2],
+        [5.1, 3.3, 1.7, 0.5],
+        [4.8, 3.4, 1.9, 0.2],
+        [5. , 3. , 1.6, 0.2],
+        [5. , 3.4, 1.6, 0.4],
+        [5.2, 3.5, 1.5, 0.2],
+        [5.2, 3.4, 1.4, 0.2],
+        [4.7, 3.2, 1.6, 0.2],
+        [4.8, 3.1, 1.6, 0.2],
+        [5.4, 3.4, 1.5, 0.4],
+        [5.2, 4.1, 1.5, 0.1],
+        [5.5, 4.2, 1.4, 0.2],
+        [4.9, 3.1, 1.5, 0.2],
+        [5. , 3.2, 1.2, 0.2],
+        [5.5, 3.5, 1.3, 0.2],
+        [4.9, 3.6, 1.4, 0.1],
+        [4.4, 3. , 1.3, 0.2],
+        [5.1, 3.4, 1.5, 0.2],
+        [5. , 3.5, 1.3, 0.3],
+        [4.5, 2.3, 1.3, 0.3],
+        [4.4, 3.2, 1.3, 0.2],
+        [5. , 3.5, 1.6, 0.6],
+        [5.1, 3.8, 1.9, 0.4],
+        [4.8, 3. , 1.4, 0.3],
+        [5.1, 3.8, 1.6, 0.2],
+        [4.6, 3.2, 1.4, 0.2],
+        [5.3, 3.7, 1.5, 0.2],
+        [5. , 3.3, 1.4, 0.2],
+        [7. , 3.2, 4.7, 1.4],
+        [6.4, 3.2, 4.5, 1.5],
+        [6.9, 3.1, 4.9, 1.5],
+        [5.5, 2.3, 4. , 1.3],
+        [6.5, 2.8, 4.6, 1.5],
+        [5.7, 2.8, 4.5, 1.3],
+        [6.3, 3.3, 4.7, 1.6],
+        [4.9, 2.4, 3.3, 1. ],
+        [6.6, 2.9, 4.6, 1.3],
+        [5.2, 2.7, 3.9, 1.4],
+        [5. , 2. , 3.5, 1. ],
+        [5.9, 3. , 4.2, 1.5],
+        [6. , 2.2, 4. , 1. ],
+        [6.1, 2.9, 4.7, 1.4],
+        [5.6, 2.9, 3.6, 1.3],
+        [6.7, 3.1, 4.4, 1.4],
+        [5.6, 3. , 4.5, 1.5],
+        [5.8, 2.7, 4.1, 1. ],
+        [6.2, 2.2, 4.5, 1.5],
+        [5.6, 2.5, 3.9, 1.1],
+        [5.9, 3.2, 4.8, 1.8],
+        [6.1, 2.8, 4. , 1.3],
+        [6.3, 2.5, 4.9, 1.5],
+        [6.1, 2.8, 4.7, 1.2],
+        [6.4, 2.9, 4.3, 1.3],
+        [6.6, 3. , 4.4, 1.4],
+        [6.8, 2.8, 4.8, 1.4],
+        [6.7, 3. , 5. , 1.7],
+        [6. , 2.9, 4.5, 1.5],
+        [5.7, 2.6, 3.5, 1. ],
+        [5.5, 2.4, 3.8, 1.1],
+        [5.5, 2.4, 3.7, 1. ],
+        [5.8, 2.7, 3.9, 1.2],
+        [6. , 2.7, 5.1, 1.6],
+        [5.4, 3. , 4.5, 1.5],
+        [6. , 3.4, 4.5, 1.6],
+        [6.7, 3.1, 4.7, 1.5],
+        [6.3, 2.3, 4.4, 1.3],
+        [5.6, 3. , 4.1, 1.3],
+        [5.5, 2.5, 4. , 1.3],
+        [5.5, 2.6, 4.4, 1.2],
+        [6.1, 3. , 4.6, 1.4],
+        [5.8, 2.6, 4. , 1.2],
+        [5. , 2.3, 3.3, 1. ],
+        [5.6, 2.7, 4.2, 1.3],
+        [5.7, 3. , 4.2, 1.2],
+        [5.7, 2.9, 4.2, 1.3],
+        [6.2, 2.9, 4.3, 1.3],
+        [5.1, 2.5, 3. , 1.1],
+        [5.7, 2.8, 4.1, 1.3],
+        [6.3, 3.3, 6. , 2.5],
+        [5.8, 2.7, 5.1, 1.9],
+        [7.1, 3. , 5.9, 2.1],
+        [6.3, 2.9, 5.6, 1.8],
+        [6.5, 3. , 5.8, 2.2],
+        [7.6, 3. , 6.6, 2.1],
+        [4.9, 2.5, 4.5, 1.7],
+        [7.3, 2.9, 6.3, 1.8],
+        [6.7, 2.5, 5.8, 1.8],
+        [7.2, 3.6, 6.1, 2.5],
+        [6.5, 3.2, 5.1, 2. ],
+        [6.4, 2.7, 5.3, 1.9],
+        [6.8, 3. , 5.5, 2.1],
+        [5.7, 2.5, 5. , 2. ],
+        [5.8, 2.8, 5.1, 2.4],
+        [6.4, 3.2, 5.3, 2.3],
+        [6.5, 3. , 5.5, 1.8],
+        [7.7, 3.8, 6.7, 2.2],
+        [7.7, 2.6, 6.9, 2.3],
+        [6. , 2.2, 5. , 1.5],
+        [6.9, 3.2, 5.7, 2.3],
+        [5.6, 2.8, 4.9, 2. ],
+        [7.7, 2.8, 6.7, 2. ],
+        [6.3, 2.7, 4.9, 1.8],
+        [6.7, 3.3, 5.7, 2.1],
+        [7.2, 3.2, 6. , 1.8],
+        [6.2, 2.8, 4.8, 1.8],
+        [6.1, 3. , 4.9, 1.8],
+        [6.4, 2.8, 5.6, 2.1],
+        [7.2, 3. , 5.8, 1.6],
+        [7.4, 2.8, 6.1, 1.9],
+        [7.9, 3.8, 6.4, 2. ],
+        [6.4, 2.8, 5.6, 2.2],
+        [6.3, 2.8, 5.1, 1.5],
+        [6.1, 2.6, 5.6, 1.4],
+        [7.7, 3. , 6.1, 2.3],
+        [6.3, 3.4, 5.6, 2.4],
+        [6.4, 3.1, 5.5, 1.8],
+        [6. , 3. , 4.8, 1.8],
+        [6.9, 3.1, 5.4, 2.1],
+        [6.7, 3.1, 5.6, 2.4],
+        [6.9, 3.1, 5.1, 2.3],
+        [5.8, 2.7, 5.1, 1.9],
+        [6.8, 3.2, 5.9, 2.3],
+        [6.7, 3.3, 5.7, 2.5],
+        [6.7, 3. , 5.2, 2.3],
+        [6.3, 2.5, 5. , 1.9],
+        [6.5, 3. , 5.2, 2. ],
+        [6.2, 3.4, 5.4, 2.3],
+        [5.9, 3. , 5.1, 1.8]]),
+ 'target': array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+ 'frame': None,
+ 'target_names': array(['setosa', 'versicolor', 'virginica'], dtype='<U10'),
+ 'DESCR': '.. _iris_dataset:\n\nIris plants dataset\n--------------------\n\n**Data Set Characteristics:**\n\n    :Number of Instances: 150 (50 in each of three classes)\n    :Number of Attributes: 4 numeric, predictive attributes and the class\n    :Attribute Information:\n        - sepal length in cm\n        - sepal width in cm\n        - petal length in cm\n        - petal width in cm\n        - class:\n                - Iris-Setosa\n                - Iris-Versicolour\n                - Iris-Virginica\n                \n    :Summary Statistics:\n\n    ============== ==== ==== ======= ===== ====================\n                    Min  Max   Mean    SD   Class Correlation\n    ============== ==== ==== ======= ===== ====================\n    sepal length:   4.3  7.9   5.84   0.83    0.7826\n    sepal width:    2.0  4.4   3.05   0.43   -0.4194\n    petal length:   1.0  6.9   3.76   1.76    0.9490  (high!)\n    petal width:    0.1  2.5   1.20   0.76    0.9565  (high!)\n    ============== ==== ==== ======= ===== ====================\n\n    :Missing Attribute Values: None\n    :Class Distribution: 33.3% for each of 3 classes.\n    :Creator: R.A. Fisher\n    :Donor: Michael Marshall (MARSHALL%PLU@io.arc.nasa.gov)\n    :Date: July, 1988\n\nThe famous Iris database, first used by Sir R.A. Fisher. The dataset is taken\nfrom Fisher\'s paper. Note that it\'s the same as in R, but not as in the UCI\nMachine Learning Repository, which has two wrong data points.\n\nThis is perhaps the best known database to be found in the\npattern recognition literature.  Fisher\'s paper is a classic in the field and\nis referenced frequently to this day.  (See Duda & Hart, for example.)  The\ndata set contains 3 classes of 50 instances each, where each class refers to a\ntype of iris plant.  One class is linearly separable from the other 2; the\nlatter are NOT linearly separable from each other.\n\n.. topic:: References\n\n   - Fisher, R.A. "The use of multiple measurements in taxonomic problems"\n     Annual Eugenics, 7, Part II, 179-188 (1936); also in "Contributions to\n     Mathematical Statistics" (John Wiley, NY, 1950).\n   - Duda, R.O., & Hart, P.E. (1973) Pattern Classification and Scene Analysis.\n     (Q327.D83) John Wiley & Sons.  ISBN 0-471-22361-1.  See page 218.\n   - Dasarathy, B.V. (1980) "Nosing Around the Neighborhood: A New System\n     Structure and Classification Rule for Recognition in Partially Exposed\n     Environments".  IEEE Transactions on Pattern Analysis and Machine\n     Intelligence, Vol. PAMI-2, No. 1, 67-71.\n   - Gates, G.W. (1972) "The Reduced Nearest Neighbor Rule".  IEEE Transactions\n     on Information Theory, May 1972, 431-433.\n   - See also: 1988 MLC Proceedings, 54-64.  Cheeseman et al"s AUTOCLASS II\n     conceptual clustering system finds 3 classes in the data.\n   - Many, many more ...',
+ 'feature_names': ['sepal length (cm)',
+  'sepal width (cm)',
+  'petal length (cm)',
+  'petal width (cm)'],
+ 'filename': 'C:\\Users\\GRALEX\\anaconda3\\lib\\site-packages\\sklearn\\datasets\\data\\iris.csv'}
+df = pd.DataFrame(iris.data, columns=iris.feature_names)
+df = df[['sepal length (cm)', 'sepal width (cm)']]
+df['variety'] = iris['target']
+df
+sepal length (cm)	sepal width (cm)	variety
+0	5.1	3.5	0
+1	4.9	3.0	0
+2	4.7	3.2	0
+3	4.6	3.1	0
+4	5.0	3.6	0
+...	...	...	...
+145	6.7	3.0	2
+146	6.3	2.5	2
+147	6.5	3.0	2
+148	6.2	3.4	2
+149	5.9	3.0	2
+150 rows × 3 columns
+
+# разделяем выборку на тренировочную и тестовую
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(df, iris.target, test_size=0.25)
+iris.target
+array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+       2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+       2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+# импортируем LDA-функционал
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+lda = LinearDiscriminantAnalysis()
+# обучаем данные
 lda.fit(X_train, y_train)
+LinearDiscriminantAnalysis()
+# делаем прогноз на тестовой выборке
+lda.predict(X_test)
+array([0, 1, 1, 1, 2, 1, 2, 0, 0, 0, 0, 2, 0, 0, 1, 2, 0, 1, 2, 2, 2, 2,
+       1, 2, 1, 0, 1, 1, 1, 2, 0, 2, 2, 2, 0, 0, 2, 0])
+# смотрим разницу факта и прогноза
+result = pd.DataFrame([y_test, lda.predict(X_test)]).T
+result
+0	1
+0	0	0
+1	1	1
+2	1	1
+3	1	1
+4	2	2
+5	1	1
+6	2	2
+7	0	0
+8	0	0
+9	0	0
+10	0	0
+11	2	2
+12	0	0
+13	0	0
+14	2	1
+15	2	2
+16	0	0
+17	1	1
+18	2	2
+19	1	2
+20	1	2
+21	2	2
+22	1	1
+23	1	2
+24	2	1
+25	0	0
+26	2	1
+27	1	1
+28	1	1
+29	2	2
+30	0	0
+31	2	2
+32	2	2
+33	2	2
+34	0	0
+35	0	0
+36	2	2
+37	0	0
+# расчет точности - отношение верных прогнозов к общему количеству позиций
+from sklearn.metrics import accuracy_score
+accuracy_score(y_test, lda.predict(X_test))
+0.8421052631578947
+# При каждом новом обучении даются разные результаты расчета точности от 0.72 до 0,86
+cmap = colors.LinearSegmentedColormap(
+    'red_blue_classes',
+    {'red': [(0, 1, 1), (1, 0.7, 0.7)],
+     'green': [(0, 0.7, 0.7), (1, 0.7, 0.7)],
+     'blue': [(0, 0.7, 0.7), (1, 1, 1)]})
+plt.cm.register_cmap(cmap=cmap)
+# Визуализация тестовой выборки
+plt.scatter(X_test['sepal length (cm)'], X_test['sepal width (cm)'], c=y_test)
+plt.show()
+
 y_pred = lda.predict(X_test)
+# Визуализация предсказания для тестовой выборки
+plt.scatter(X_test['sepal length (cm)'], X_test['sepal width (cm)'], c=y_pred)
+plt.show()
 
-# Визуализация предсказаний и центров классов
-plt.figure(figsize=(10, 6))
+lda = LinearDiscriminantAnalysis()
+lda.fit(X_test, y_pred)
+LinearDiscriminantAnalysis()
+# центры классов
+lda.means_
+array([[4.98461538, 3.39230769, 0.        ],
+       [5.83636364, 2.8       , 1.27272727],
+       [6.76428571, 2.87142857, 1.78571429]])
+# Визуализация предсказания для тестовой выборки и центры классов
+plt.scatter(X_test['sepal length (cm)'], X_test['sepal width (cm)'], c=y_pred)
+plt.scatter(lda.means_[:, 0], lda.means_[:, 1], c='r', s=150, marker='*')
+<matplotlib.collections.PathCollection at 0x20c5fde2ac0>
+
+ 
+# Отбрасываем целевую переменную из df
+df2 = df[['sepal length (cm)', 'sepal width (cm)']]
+df2
+sepal length (cm)	sepal width (cm)
+0	5.1	3.5
+1	4.9	3.0
+2	4.7	3.2
+3	4.6	3.1
+4	5.0	3.6
+...	...	...
+145	6.7	3.0
+146	6.3	2.5
+147	6.5	3.0
+148	6.2	3.4
+149	5.9	3.0
+150 rows × 2 columns
+
+# Подбираем оптимальное число кластеров для алгоритма kmeans и визуализируем полученную кластеризацию
+X = df2[['sepal length (cm)', 'sepal width (cm)']].to_numpy()
+X
+array([[5.1, 3.5],
+       [4.9, 3. ],
+       [4.7, 3.2],
+       [4.6, 3.1],
+       [5. , 3.6],
+       [5.4, 3.9],
+       [4.6, 3.4],
+       [5. , 3.4],
+       [4.4, 2.9],
+       [4.9, 3.1],
+       [5.4, 3.7],
+       [4.8, 3.4],
+       [4.8, 3. ],
+       [4.3, 3. ],
+       [5.8, 4. ],
+       [5.7, 4.4],
+       [5.4, 3.9],
+       [5.1, 3.5],
+       [5.7, 3.8],
+       [5.1, 3.8],
+       [5.4, 3.4],
+       [5.1, 3.7],
+       [4.6, 3.6],
+       [5.1, 3.3],
+       [4.8, 3.4],
+       [5. , 3. ],
+       [5. , 3.4],
+       [5.2, 3.5],
+       [5.2, 3.4],
+       [4.7, 3.2],
+       [4.8, 3.1],
+       [5.4, 3.4],
+       [5.2, 4.1],
+       [5.5, 4.2],
+       [4.9, 3.1],
+       [5. , 3.2],
+       [5.5, 3.5],
+       [4.9, 3.6],
+       [4.4, 3. ],
+       [5.1, 3.4],
+       [5. , 3.5],
+       [4.5, 2.3],
+       [4.4, 3.2],
+       [5. , 3.5],
+       [5.1, 3.8],
+       [4.8, 3. ],
+       [5.1, 3.8],
+       [4.6, 3.2],
+       [5.3, 3.7],
+       [5. , 3.3],
+       [7. , 3.2],
+       [6.4, 3.2],
+       [6.9, 3.1],
+       [5.5, 2.3],
+       [6.5, 2.8],
+       [5.7, 2.8],
+       [6.3, 3.3],
+       [4.9, 2.4],
+       [6.6, 2.9],
+       [5.2, 2.7],
+       [5. , 2. ],
+       [5.9, 3. ],
+       [6. , 2.2],
+       [6.1, 2.9],
+       [5.6, 2.9],
+       [6.7, 3.1],
+       [5.6, 3. ],
+       [5.8, 2.7],
+       [6.2, 2.2],
+       [5.6, 2.5],
+       [5.9, 3.2],
+       [6.1, 2.8],
+       [6.3, 2.5],
+       [6.1, 2.8],
+       [6.4, 2.9],
+       [6.6, 3. ],
+       [6.8, 2.8],
+       [6.7, 3. ],
+       [6. , 2.9],
+       [5.7, 2.6],
+       [5.5, 2.4],
+       [5.5, 2.4],
+       [5.8, 2.7],
+       [6. , 2.7],
+       [5.4, 3. ],
+       [6. , 3.4],
+       [6.7, 3.1],
+       [6.3, 2.3],
+       [5.6, 3. ],
+       [5.5, 2.5],
+       [5.5, 2.6],
+       [6.1, 3. ],
+       [5.8, 2.6],
+       [5. , 2.3],
+       [5.6, 2.7],
+       [5.7, 3. ],
+       [5.7, 2.9],
+       [6.2, 2.9],
+       [5.1, 2.5],
+       [5.7, 2.8],
+       [6.3, 3.3],
+       [5.8, 2.7],
+       [7.1, 3. ],
+       [6.3, 2.9],
+       [6.5, 3. ],
+       [7.6, 3. ],
+       [4.9, 2.5],
+       [7.3, 2.9],
+       [6.7, 2.5],
+       [7.2, 3.6],
+       [6.5, 3.2],
+       [6.4, 2.7],
+       [6.8, 3. ],
+       [5.7, 2.5],
+       [5.8, 2.8],
+       [6.4, 3.2],
+       [6.5, 3. ],
+       [7.7, 3.8],
+       [7.7, 2.6],
+       [6. , 2.2],
+       [6.9, 3.2],
+       [5.6, 2.8],
+       [7.7, 2.8],
+       [6.3, 2.7],
+       [6.7, 3.3],
+       [7.2, 3.2],
+       [6.2, 2.8],
+       [6.1, 3. ],
+       [6.4, 2.8],
+       [7.2, 3. ],
+       [7.4, 2.8],
+       [7.9, 3.8],
+       [6.4, 2.8],
+       [6.3, 2.8],
+       [6.1, 2.6],
+       [7.7, 3. ],
+       [6.3, 3.4],
+       [6.4, 3.1],
+       [6. , 3. ],
+       [6.9, 3.1],
+       [6.7, 3.1],
+       [6.9, 3.1],
+       [5.8, 2.7],
+       [6.8, 3.2],
+       [6.7, 3.3],
+       [6.7, 3. ],
+       [6.3, 2.5],
+       [6.5, 3. ],
+       [6.2, 3.4],
+       [5.9, 3. ]])
+plt.scatter(X[:, 0], X[:, 1], cmap='autumn', s=60)
+<matplotlib.collections.PathCollection at 0x20c5fe3ddc0>
+
+df2.plot(kind='scatter', x='sepal length (cm)', y='sepal width (cm)')
+<AxesSubplot:xlabel='sepal length (cm)', ylabel='sepal width (cm)'>
+
+# приведем данные к единому масштабу
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+# fit-transform сразу обучается и преобразует данные
+X_scaled = scaler.fit_transform(X)
+X_scaled
+array([[-0.90068117,  1.01900435],
+       [-1.14301691, -0.13197948],
+       [-1.38535265,  0.32841405],
+       [-1.50652052,  0.09821729],
+       [-1.02184904,  1.24920112],
+       [-0.53717756,  1.93979142],
+       [-1.50652052,  0.78880759],
+       [-1.02184904,  0.78880759],
+       [-1.74885626, -0.36217625],
+       [-1.14301691,  0.09821729],
+       [-0.53717756,  1.47939788],
+       [-1.26418478,  0.78880759],
+       [-1.26418478, -0.13197948],
+       [-1.87002413, -0.13197948],
+       [-0.05250608,  2.16998818],
+       [-0.17367395,  3.09077525],
+       [-0.53717756,  1.93979142],
+       [-0.90068117,  1.01900435],
+       [-0.17367395,  1.70959465],
+       [-0.90068117,  1.70959465],
+       [-0.53717756,  0.78880759],
+       [-0.90068117,  1.47939788],
+       [-1.50652052,  1.24920112],
+       [-0.90068117,  0.55861082],
+       [-1.26418478,  0.78880759],
+       [-1.02184904, -0.13197948],
+       [-1.02184904,  0.78880759],
+       [-0.7795133 ,  1.01900435],
+       [-0.7795133 ,  0.78880759],
+       [-1.38535265,  0.32841405],
+       [-1.26418478,  0.09821729],
+       [-0.53717756,  0.78880759],
+       [-0.7795133 ,  2.40018495],
+       [-0.41600969,  2.63038172],
+       [-1.14301691,  0.09821729],
+       [-1.02184904,  0.32841405],
+       [-0.41600969,  1.01900435],
+       [-1.14301691,  1.24920112],
+       [-1.74885626, -0.13197948],
+       [-0.90068117,  0.78880759],
+       [-1.02184904,  1.01900435],
+       [-1.62768839, -1.74335684],
+       [-1.74885626,  0.32841405],
+       [-1.02184904,  1.01900435],
+       [-0.90068117,  1.70959465],
+       [-1.26418478, -0.13197948],
+       [-0.90068117,  1.70959465],
+       [-1.50652052,  0.32841405],
+       [-0.65834543,  1.47939788],
+       [-1.02184904,  0.55861082],
+       [ 1.40150837,  0.32841405],
+       [ 0.67450115,  0.32841405],
+       [ 1.2803405 ,  0.09821729],
+       [-0.41600969, -1.74335684],
+       [ 0.79566902, -0.59237301],
+       [-0.17367395, -0.59237301],
+       [ 0.55333328,  0.55861082],
+       [-1.14301691, -1.51316008],
+       [ 0.91683689, -0.36217625],
+       [-0.7795133 , -0.82256978],
+       [-1.02184904, -2.43394714],
+       [ 0.06866179, -0.13197948],
+       [ 0.18982966, -1.97355361],
+       [ 0.31099753, -0.36217625],
+       [-0.29484182, -0.36217625],
+       [ 1.03800476,  0.09821729],
+       [-0.29484182, -0.13197948],
+       [-0.05250608, -0.82256978],
+       [ 0.4321654 , -1.97355361],
+       [-0.29484182, -1.28296331],
+       [ 0.06866179,  0.32841405],
+       [ 0.31099753, -0.59237301],
+       [ 0.55333328, -1.28296331],
+       [ 0.31099753, -0.59237301],
+       [ 0.67450115, -0.36217625],
+       [ 0.91683689, -0.13197948],
+       [ 1.15917263, -0.59237301],
+       [ 1.03800476, -0.13197948],
+       [ 0.18982966, -0.36217625],
+       [-0.17367395, -1.05276654],
+       [-0.41600969, -1.51316008],
+       [-0.41600969, -1.51316008],
+       [-0.05250608, -0.82256978],
+       [ 0.18982966, -0.82256978],
+       [-0.53717756, -0.13197948],
+       [ 0.18982966,  0.78880759],
+       [ 1.03800476,  0.09821729],
+       [ 0.55333328, -1.74335684],
+       [-0.29484182, -0.13197948],
+       [-0.41600969, -1.28296331],
+       [-0.41600969, -1.05276654],
+       [ 0.31099753, -0.13197948],
+       [-0.05250608, -1.05276654],
+       [-1.02184904, -1.74335684],
+       [-0.29484182, -0.82256978],
+       [-0.17367395, -0.13197948],
+       [-0.17367395, -0.36217625],
+       [ 0.4321654 , -0.36217625],
+       [-0.90068117, -1.28296331],
+       [-0.17367395, -0.59237301],
+       [ 0.55333328,  0.55861082],
+       [-0.05250608, -0.82256978],
+       [ 1.52267624, -0.13197948],
+       [ 0.55333328, -0.36217625],
+       [ 0.79566902, -0.13197948],
+       [ 2.12851559, -0.13197948],
+       [-1.14301691, -1.28296331],
+       [ 1.76501198, -0.36217625],
+       [ 1.03800476, -1.28296331],
+       [ 1.64384411,  1.24920112],
+       [ 0.79566902,  0.32841405],
+       [ 0.67450115, -0.82256978],
+       [ 1.15917263, -0.13197948],
+       [-0.17367395, -1.28296331],
+       [-0.05250608, -0.59237301],
+       [ 0.67450115,  0.32841405],
+       [ 0.79566902, -0.13197948],
+       [ 2.24968346,  1.70959465],
+       [ 2.24968346, -1.05276654],
+       [ 0.18982966, -1.97355361],
+       [ 1.2803405 ,  0.32841405],
+       [-0.29484182, -0.59237301],
+       [ 2.24968346, -0.59237301],
+       [ 0.55333328, -0.82256978],
+       [ 1.03800476,  0.55861082],
+       [ 1.64384411,  0.32841405],
+       [ 0.4321654 , -0.59237301],
+       [ 0.31099753, -0.13197948],
+       [ 0.67450115, -0.59237301],
+       [ 1.64384411, -0.13197948],
+       [ 1.88617985, -0.59237301],
+       [ 2.4920192 ,  1.70959465],
+       [ 0.67450115, -0.59237301],
+       [ 0.55333328, -0.59237301],
+       [ 0.31099753, -1.05276654],
+       [ 2.24968346, -0.13197948],
+       [ 0.55333328,  0.78880759],
+       [ 0.67450115,  0.09821729],
+       [ 0.18982966, -0.13197948],
+       [ 1.2803405 ,  0.09821729],
+       [ 1.03800476,  0.09821729],
+       [ 1.2803405 ,  0.09821729],
+       [-0.05250608, -0.82256978],
+       [ 1.15917263,  0.32841405],
+       [ 1.03800476,  0.55861082],
+       [ 1.03800476, -0.13197948],
+       [ 0.55333328, -1.28296331],
+       [ 0.79566902, -0.13197948],
+       [ 0.4321654 ,  0.78880759],
+       [ 0.06866179, -0.13197948]])
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1],cmap='autumn', s=60)
+<matplotlib.collections.PathCollection at 0x20c5ff51220>
+
+from sklearn.cluster import KMeans
+# явно указываем количество кластеров
+kmeans = KMeans(n_clusters=2)
+# fit_predict обучается на данных и каждому объекту присваивает кластер
+clusters = kmeans.fit_predict(X_scaled)
+clusters
+array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1,
+       1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], cmap='autumn', c=clusters, s=60)
+<matplotlib.collections.PathCollection at 0x20c607ef910>
+
+# строим график локтя
+
+# создаем список для инерции
+k_inertia = []
+# задаем диапазон кластеров
+ks = range(1, 20)
+
+for k in ks:
+    clf_kmeans = KMeans(n_clusters=k)
+    clusters_kmeans = clf_kmeans.fit_predict(X_scaled)
+    # добавляем инерцию каждой модели в список
+    k_inertia.append(clf_kmeans.inertia_)
+plt.plot(ks, k_inertia)
+plt.plot(ks, k_inertia ,'ro')
+[<matplotlib.lines.Line2D at 0x20c6045fd90>]
+
+ 
+Иерархическая кластеризация
+from scipy.spatial.distance import pdist
+from scipy.cluster import hierarchy
+# строим дендрограмму
+distance_mat = pdist(X_scaled) # pdist посчитает нам матрицу попарных расстояний между точками
+# Z = hierarchy.linkage(distance_mat) # linkage — реализация агломеративного алгоритма
+Z = hierarchy.linkage(distance_mat, 'ward')
+plt.figure(figsize=(20, 9))
+dn = hierarchy.dendrogram(Z)
+
+ 
+ 
+Визуализация обучающей выборки по 2-м классам (ради интереса)
+small_train = X_train[(y_train == 0) | (y_train == 2)]
+small_train = small_train[['sepal length (cm)', 'sepal width (cm)']]
+sy_train = y_train[(y_train == 0) | (y_train == 2)]
+plt.scatter(small_train['sepal length (cm)'], small_train['sepal width (cm)'], c=sy_train)
+plt.show()
+
+lda_small = LinearDiscriminantAnalysis()
+lda_small.fit(small_train, sy_train)
+LinearDiscriminantAnalysis()
+lda_small.means_
+array([[5.01351351, 3.44054054],
+       [6.55      , 3.00555556]])
+# сам scatter plot
+plt.scatter(small_train['sepal length (cm)'], small_train['sepal width (cm)'], c=sy_train)
+# центроиды
+plt.scatter(lda_small.means_[:, 0], lda_small.means_[:, 1], c='r', s=150, marker='*')
+
+# делаем условную "сетку"
+nx, ny = 200, 100
+x_min, x_max = plt.xlim()
+y_min, y_max = plt.ylim()
+xx, yy = np.meshgrid(np.linspace(x_min, x_max, nx),
+                         np.linspace(y_min, y_max, ny))
+
+# предсказываем класс каждой точки нашей сетки
+Z = lda_small.predict_proba(np.c_[xx.ravel(), yy.ravel()])
+Z = Z[:, 1].reshape(xx.shape)
+
+# закрашиваем классы разными цветами
+plt.pcolormesh(xx, yy, Z, cmap='red_blue_classes',
+                   norm=colors.Normalize(0., 1.), zorder=-1, shading='auto')
+
+# отделяем друг от друга
+plt.contour(xx, yy, Z, [0.5], linewidths=2., colors='white')
+<matplotlib.contour.QuadContourSet at 0x20c6065fe20>
+
+ 
+Statology
+# https://www.statology.org/linear-discriminant-analysis-in-python/
+#LOAD NECESSARY LIBRARIES
+from sklearn.model_selection import train_test_split
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.model_selection import cross_val_score
+from sklearn import datasets
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+#LOAD AND VIEW IRIS DATASET
+iris = datasets.load_iris()
+df = pd.DataFrame(data = np.c_[iris['data'], iris['target']],
+                 columns = iris['feature_names'] + ['target'])
+df['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
+df.columns = ['s_length', 's_width', 'p_length', 'p_width', 'target', 'species']
+print(df.head())
+len(df.index)
+   s_length  s_width  p_length  p_width  target species
+0       5.1      3.5       1.4      0.2     0.0  setosa
+1       4.9      3.0       1.4      0.2     0.0  setosa
+2       4.7      3.2       1.3      0.2     0.0  setosa
+3       4.6      3.1       1.5      0.2     0.0  setosa
+4       5.0      3.6       1.4      0.2     0.0  setosa
+150
+#DEFINE PREDICTOR AND RESPONSE VARIABLES
+X = df[['s_length', 's_width', 'p_length', 'p_width']]
+y = df['species']
+#FIT LDA MODEL
+model = LinearDiscriminantAnalysis()
+model.fit(X, y)
+LinearDiscriminantAnalysis()
+#DEFINE METHOD TO EVALUATE MODEL
+cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+#EVALUATE MODEL
+scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1)
+print(np.mean(scores))
+0.9800000000000001
+#USE MODEL TO MAKE PREDICTION ON NEW OBSERVATION
+new = [5, 3, 1, .4]
+model.predict([new])
+array(['setosa'], dtype='<U10')
+#CREATE LDA PLOT
+X = iris.data
+y = iris.target
+model = LinearDiscriminantAnalysis()
+X_r2 = model.fit(X, y).transform(X)
+target_names = iris.target_names
+
+plt.figure()
 colors = ['red', 'green', 'blue']
-for i, color in enumerate(colors):
-    plt.scatter(X_test[y_test == i, 0], X_test[y_test == i, 1], color=color, label=f'Class {i} (True)')
-    plt.scatter(X_test[y_pred == i, 0], X_test[y_pred == i, 1], color=color, marker='x', label=f'Class {i} (Predicted)')
-
-# Центры классов
-class_centers = lda.means_
-plt.scatter(class_centers[:, 0], class_centers[:, 1], color='black', marker='o', s=100, label='Class Centers')
-
-plt.title('LDA Classification')
-plt.xlabel('Sepal Length')
-plt.ylabel('Sepal Width')
-plt.legend()
-plt.grid(True)
+lw = 2
+for color, i, target_name in zip(colors, [0, 1, 2], target_names):
+    plt.scatter(X_r2[y == i, 0], X_r2[y == i, 1], alpha=.8, color=color,
+                label=target_name)
+plt.legend(loc='best', shadow=False, scatterpoints=1)
 plt.show()
 
-# Отбрасывание целевой переменной для кластеризации
-X = iris.data[:, :2]  # Два признака: sepal_length и sepal_width
-
-# Подбор оптимального числа кластеров с использованием силуэтного анализа
-silhouette_scores = []
-k_values = range(2, 10)
-for k in k_values:
-    kmeans = KMeans(n_clusters=k, random_state=42)
-    kmeans.fit(X)
-    score = silhouette_score(X, kmeans.labels_)
-    silhouette_scores.append(score)
-
-# Визуализация силуэтного анализа
-plt.figure(figsize=(10, 6))
-plt.plot(k_values, silhouette_scores, marker='o')
-plt.title('Silhouette Analysis')
-plt.xlabel('Number of Clusters')
-plt.ylabel('Silhouette Score')
-plt.grid(True)
-plt.show()
-
-# Выбор оптимального числа кластеров (максимальное значение силуэтного коэффициента)
-optimal_k = k_values[np.argmax(silhouette_scores)]
-print(f'Optimal number of clusters: {optimal_k}')
-
-# Кластеризация с оптимальным числом кластеров
-kmeans = KMeans(n_clusters=optimal_k, random_state=42)
-kmeans.fit(X)
-
-# Визуализация кластеризации
-plt.figure(figsize=(10, 6))
-for i in range(optimal_k):
-    plt.scatter(X[kmeans.labels_ == i, 0], X[kmeans.labels_ == i, 1], label=f'Cluster {i}')
-
-# Центры кластеров
-plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], color='black', marker='x', s=100, label='Cluster Centers')
-
-plt.title('KMeans Clustering')
-plt.xlabel('Sepal Length')
-plt.ylabel('Sepal Width')
-plt.legend()
-plt.grid(True)
-plt.show()
+ 
+ 
+ 
